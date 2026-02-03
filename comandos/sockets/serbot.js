@@ -43,15 +43,14 @@ let handler = async (m, { conn, args, usedPrefix, command, isOwner }) => {
   if (!fs.existsSync(pathJadiBot)){
     fs.mkdirSync(pathJadiBot, { recursive: true })
   }
- JBOptions.pathJadiBot = pathJadiBot
- JBOptions.m = m
- JBOptions.conn = conn
- JBOptions.args = args
- JBOptions.usedPrefix = usedPrefix
- JBOptions.command = command
- JBOptions.fromCommand = true
- JadiBot(JBOptions)
-  // guardar timestamp correctamente
+  JBOptions.pathJadiBot = pathJadiBot
+  JBOptions.m = m
+  JBOptions.conn = conn
+  JBOptions.args = args
+  JBOptions.usedPrefix = usedPrefix
+  JBOptions.command = command
+  JBOptions.fromCommand = true
+  JadiBot(JBOptions)  // guardar timestamp correctamente
   if (!global.db.data.users[m.sender]) global.db.data.users[m.sender] = {}
   global.db.data.users[m.sender].Subs = Date.now()
 }
