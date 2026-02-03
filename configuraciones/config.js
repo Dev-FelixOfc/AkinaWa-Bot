@@ -14,8 +14,8 @@ watchFile(file, () => {
 global.group = 'https://chat.whatsapp.com/Ht5ck9c1Eji2TRBXSkTHjY';
 global.community = 'https://whatsapp.com/channel/0029VbBkjlfLSmbWl3SH6737';
 global.channel = 'https://whatsapp.com/channel/0029VbBkjlfLSmbWl3SH6737';
-global.github = 'https://github.com/tu-usuario/tu-repositorio'; // Actualiza con tu GitHub real
-global.gmail = 'tu-email@gmail.com'; // Actualiza con tu email real
+global.github = 'https://github.com/Dev-FelixOfc/AkinaWa-Bot'; 
+global.gmail = 'xlfelixgamer@gmail.com'; // Actualiza con tu email real
 
 // Canales de newsletter
 global.ch = {
@@ -53,8 +53,8 @@ global.suittag = ['18293527611']; // Reemplaza el placeholder con números reale
 global.prems = []; // Array vacío para usuarios premium (agrega según necesites)
 
 // Assets y configuraciones visuales
-global.banner = 'https://www.hdwallpapers.in/download/yotsuba_nakano_hd_the_quintessential_quintuplets-2560x1440.jpg';
-global.icono = 'https://i.pinimg.com/736x/c5/83/6e/c5836efb60c825e71999ef67d0bbb700.jpg';
+global.banner = 'https://felixproyects.ooguy.com/AkinaWa-Bot.jpg';
+global.icono = 'https://felixproyects.ooguy.com/AkinaWa-Bot.jpg';
 global.catalogo = null;
 
 // Otras configuraciones
