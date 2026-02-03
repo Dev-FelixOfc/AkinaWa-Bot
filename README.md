@@ -1,6 +1,6 @@
 # Akina Wa
 
-![Akina Wa Banner](https://w0.peakpx.com/wallpaper/27/79/HD-wallpaper-neko-twins-pretty-dress-white-hair-anime-girls-sisters-beautiful-clouds-sweet-ponytail-nice-moon-anime-long-hair-light-black-hair-female-beauties-animal-ears-twinatil-sky-hat-cute.jpg)
+![Akina Wa Banner](https://felixprojects.ooguy.com/AkinaWa-Bot.jpg)
 
 [![Beta Version](https://img.shields.io/badge/version-Beta%20v0.1.0-blue)](https://github.com/Dev-FelixOfc/AkinaWa-Bot/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
