@@ -1,5 +1,12 @@
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '1'
 import './configuraciones/config.js'
+import chalk from 'chalk'
+import syntaxerror from 'syntax-error'
+import pino from 'pino'
+import Pino from 'pino'
+import path, { join, dirname } from 'path'
+import { Boom } from '@hapi/boom'
+import { makeWASocket, protoType, serialize } from './configuraciones/simple.js'
 import './contextos/fake.js'
 import cfonts from 'cfonts'
 import { createRequire } from 'module'
@@ -11,15 +18,8 @@ import yargs from 'yargs';
 import { spawn, execSync } from 'child_process'
 import lodash from 'lodash'
 import { JadiBot } from './comandos/sockets/serbot.js'
-import chalk from 'chalk'
-import syntaxerror from 'syntax-error'
-import pino from 'pino'
-import Pino from 'pino'
-import path, { join, dirname } from 'path'
-import { Boom } from '@hapi/boom'
-import { makeWASocket, protoType, serialize } from './lib/simple.js'
 import { Low, JSONFile } from 'lowdb'
-import store from './lib/store.js'
+import store from './configuraciones/store.js'
 const { proto } = (await import('@whiskeysockets/baileys')).default
 import pkg from 'google-libphonenumber'
 const { PhoneNumberUtil } = pkg
@@ -156,7 +156,7 @@ phoneNumber = await question(chalk.bgBlack(chalk.bold.greenBright(`[ ✿ ]  Por 
 phoneNumber = phoneNumber.replace(/\D/g,'')
 if (!phoneNumber.startsWith('+')) {
 phoneNumber = `+${phoneNumber}`
-}} while (!await isValidPhoneNumber(phoneNumber))
+}} while (!awaity isValidPhoneNumber(phoneNumber))
 rl.close()
 addNumber = phoneNumber.replace(/\D/g, '')
 setTimeout(async () => {
@@ -265,15 +265,15 @@ if (readBotPath.includes(creds)) {
 JadiBot({pathJadiBot: botPath, m: null, conn, args: '', usedPrefix: '/', command: 'serbot'})
 }}}}
 
-const pluginFolder = global.__dirname(join(__dirname, './comandos/index'))
-const pluginFilter = (filename) => /\.js$/.test(filename)
-global.plugins = {}
+const comandoFolder = global.__dirname(join(__dirname, './comandos/index'))
+const comandoFilter = (filename) => /\.js$/.test(filename)
+global.comandos = {}
 async function filesInit() {
-for (const filename of readdirSync(pluginFolder).filter(pluginFilter)) {
+for (const filename of readdirSync(pluginFolder).filter(comandoFilter)) {
 try {
-const file = global.__filename(join(pluginFolder, filename))
+const file = global.__filename(join(comandoFolder, filename))
 const module = await import(file)
-global.plugins[filename] = module.default || module
+global.comandos[filename] = module.default || module
 } catch (e) {
 conn.logger.error(e)
 delete global.comanndos[filename]
@@ -281,14 +281,14 @@ delete global.comanndos[filename]
 filesInit().then((_) => Object.keys(global.comanndos)).catch(console.error)
 
 global.reload = async (_ev, filename) => {
-if (pluginFilter(filename)) {
-const dir = global.__filename(join(pluginFolder, filename), true);
-if (filename in global.plugins) {
-if (existsSync(dir)) conn.logger.info(` updated plugin - '${filename}'`)
+if (comandoFilter(filename)) {
+const dir = global.__filename(join(comandoFolder, filename), true);
+if (filename in global.comandos) {
+if (existsSync(dir)) conn.logger.info(` updated command - '${filename}'`)
 else {
-conn.logger.warn(`deleted plugin - '${filename}'`)
-return delete global.plugins[filename]
-}} else conn.logger.info(`new plugin - '${filename}'`)
+conn.logger.warn(`deleted command - '${filename}'`)
+return delete global.comandos[filename]
+}} else conn.logger.info(`new command - '${filename}'`)
 const err = syntaxerror(readFileSync(dir), filename, {
 sourceType: 'module',
 allowAwaitOutsideFunction: true,
@@ -297,14 +297,14 @@ if (err) conn.logger.error(`syntax error while loading '${filename}'\n${format(e
 else {
 try {
 const module = (await import(`${global.__filename(dir)}?update=${Date.now()}`));
-global.plugins[filename] = module.default || module;
+global.comandos[filename] = module.default || module;
 } catch (e) {
-conn.logger.error(`error require plugin '${filename}\n${format(e)}'`)
+conn.logger.error(`error require Command '${filename}\n${format(e)}'`)
 } finally {
-global.plugins = Object.fromEntries(Object.entries(global.plugins).sort(([a], [b]) => a.localeCompare(b)))
+global.comandos = Object.fromEntries(Object.entries(global.comandos).sort(([a], [b]) => a.localeCompare(b)))
 }}}}
 Object.freeze(global.reload)
-watch(pluginFolder, global.reload)
+watch(comandoFolder, global.reload)
 await global.reloadHandler()
 async function _quickTest() {
 const test = await Promise.all([
@@ -330,17 +330,17 @@ const [ffmpeg, ffprobe, ffmpegWebp, convert, magick, gm, find] = test;
 const s = global.support = {ffmpeg, ffprobe, ffmpegWebp, convert, magick, gm, find};
 Object.freeze(global.support);
 }
-// Tmp
+// Carpeta Temporal
 setInterval(async () => {
-const tmpDir = join(__dirname, 'tmp')
+const tmpDir = join(__dirname, 'temporal')
 try {
 const filenames = readdirSync(tmpDir)
 filenames.forEach(file => {
 const filePath = join(tmpDir, file)
 unlinkSync(filePath)})
-console.log(chalk.gray(`→ Archivos de la carpeta TMP eliminados`))
+console.log(chalk.gray(`→ Archivos de la carpeta temporal eliminados`))
 } catch {
-console.log(chalk.gray(`→ Los archivos de la carpeta TMP no se pudieron eliminar`));
+console.log(chalk.gray(`→ Los archivos de la carpeta temporal no se pudieron eliminar`));
 }}, 30 * 1000) 
 _quickTest().catch(console.error)
 async function isValidPhoneNumber(number) {
