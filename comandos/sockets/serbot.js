@@ -43,6 +43,7 @@ let handler = async (m, { conn, args, usedPrefix, command, isOwner }) => {
   if (!fs.existsSync(pathJadiBot)){
     fs.mkdirSync(pathJadiBot, { recursive: true })
   }
+
   JBOptions.pathJadiBot = pathJadiBot
   JBOptions.m = m
   JBOptions.conn = conn
