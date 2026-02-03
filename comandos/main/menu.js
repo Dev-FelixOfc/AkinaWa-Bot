@@ -4,8 +4,8 @@ import { join } from 'path'
 let handler = async (m, { conn }) => {
   try {
     let taguser = '@' + m.sender.split('@')[0]
-    let nombreBot = '${botname}'
-    let bannerFinal = 'https://files.catbox.moe/cx0mbi.jpg'
+    let nombreBot = 'Akina Wa'
+    let bannerFinal = 'https://felixproyects.ooguy.com/AkinaWa-Bot.jpg'
 
     const botActual = conn.user?.jid?.split('@')[0]?.replace(/\D/g, '')
     const configPath = join('./JadiBots', botActual || '', 'config.json')
@@ -23,13 +23,7 @@ let handler = async (m, { conn }) => {
     const devby = `${nombreBot}, ${dev}`
 
     let menu = `𝐇𝐨𝐥𝐚! 𝐒𝐨𝐲 *${nombreBot}* *${tipo}*
-Aǫᴜɪ ᴛɪᴇɴᴇs ʟᴀ ʟɪsᴛᴀ ᴅᴇ ᴄᴏᴍᴀɴᴅᴏs: 
-╭┈ ↷
-│ ✐ ${textbot}
-│ ✐ ꒷ꕤ💎ദ ᴘᴀɢɪɴᴀ ᴡᴇʙ ෴
-│ https://makima-bot-page.vercel.app/
-│ ✐ ꒷ꕤ💎ദ ᴄᴀɴᴀʟ ᴏғɪᴄɪᴀʟ ෴
-│ https://whatsapp.com/channel/0029VbBdQFMB4hdMMGAzAr37`
+Aǫᴜɪ ᴛɪᴇɴᴇs ʟᴀ ʟɪsᴛᴀ ᴅᴇ ᴄᴏᴍᴀɴᴅᴏs`
 
     await conn.sendMessage(m.chat, {
       text: menu,
