@@ -50,7 +50,7 @@ let handler = async (m, { conn, args, usedPrefix, command, isOwner }) => {
  JBOptions.usedPrefix = usedPrefix
  JBOptions.command = command
  JBOptions.fromCommand = true
-  JadiBot(JBOptions)
+ JadiBot(JBOptions)
   // guardar timestamp correctamente
   if (!global.db.data.users[m.sender]) global.db.data.users[m.sender] = {}
   global.db.data.users[m.sender].Subs = Date.now()
