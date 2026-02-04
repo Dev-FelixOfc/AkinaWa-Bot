@@ -355,7 +355,7 @@ if (m.sender && (user = global.db.data.users[m.sender])) {
 user.exp += m.exp
 }}
 try {
-if (!opts["noprint"]) await (await import("./configuraciones/manejador.js")).default(m, this)
+if (!opts["noprint"]) await (await import("./comandos/configuraciones/mensajes.js")).default(m, this)
 } catch (err) {
 console.warn(err)
 console.log(m.message)
