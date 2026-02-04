@@ -156,7 +156,7 @@ phoneNumber = await question(chalk.bgBlack(chalk.bold.greenBright(`[ ✿ ]  Por 
 phoneNumber = phoneNumber.replace(/\D/g,'')
 if (!phoneNumber.startsWith('+')) {
 phoneNumber = `+${phoneNumber}`
-}} while (!await isValidPhoneNumber(phoneNumber))
+}} while (!await isValidPhoneNumber(phoneNumber)))
 rl.close()
 addNumber = phoneNumber.replace(/\D/g, '')
 setTimeout(async () => {
