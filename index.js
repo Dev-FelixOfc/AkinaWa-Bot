@@ -41,7 +41,7 @@ gradient: ['yellow', 'blue']
 say('made with ❤️ by Felix ofc', {
 font: 'console',
 align: 'center',
-colors: ['black', 'blue', 'pink']
+colors: ['black', 'blue', 'yellow']
 })
 protoType()
 serialize()
