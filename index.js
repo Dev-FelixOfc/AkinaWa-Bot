@@ -36,12 +36,12 @@ console.log(chalk.magentaBright('\nIniciando proyecto...'))
 say('AKINA', {
 font: 'simple',
 align: 'left',
-gradient: ['blue', 'white']
+gradient: ['blue', 'blue']
 })
 say('made with ❤️ by Felix ofc', {
 font: 'console',
 align: 'center',
-colors: ['blue', 'magenta', 'yellow']
+colors: ['blue', 'blue', 'yellow']
 })
 protoType()
 serialize()
