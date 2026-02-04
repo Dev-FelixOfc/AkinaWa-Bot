@@ -278,7 +278,7 @@ global.comandos[filename] = module.default || module
 conn.logger.error(e)
 delete global.comanndos[filename]
 }}}
-filesInit().then((_) => Object.keys(global.comanndos)).catch(console.error)
+filesInit().then((_) => Object.keys(global.comandos)).catch(console.error)
 
 global.reload = async (_ev, filename) => {
 if (comandoFilter(filename)) {
