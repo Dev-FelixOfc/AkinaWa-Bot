@@ -205,10 +205,10 @@ await global.reloadHandler(true).catch(console.error)
 }};
 process.on('uncaughtException', console.error);
 let isInit = true;
-let handler = await import('./handler.js')
+let handler = await import('./configuraciones/manejador.js')
 global.reloadHandler = async function(restatConn) {
 try {
-const Handler = await import(`./handler.js?update=${Date.now()}`).catch(console.error);
+const Handler = await import(`./configuraciones/manejador.js?update=${Date.now()}`).catch(console.error);
 if (Object.keys(Handler || {}).length) handler = Handler
 } catch (e) {
 console.error(e);
