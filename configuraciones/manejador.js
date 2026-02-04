@@ -1,4 +1,4 @@
-import { smsg } from "./comandos/configuraciones/simple.js"
+import { smsg } from "../comandos/configuraciones/simple.js"
 import { format } from "util"
 import { fileURLToPath } from "url"
 import path, { join } from "path"
