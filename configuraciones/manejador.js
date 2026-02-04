@@ -159,7 +159,7 @@ const isRAdmin = userGroup?.admin == "superadmin" || false
 const isAdmin = isRAdmin || userGroup?.admin == "admin" || false
 const isBotAdmin = botGroup?.admin || false
 
-const ___dirname = path.join(path.dirname(fileURLToPath(import.meta.url)), "./plugins")
+const ___dirname = path.join(path.dirname(fileURLToPath(import.meta.url)), "./comandos")
 for (const name in global.plugins) {
 const plugin = global.plugins[name]
 if (!plugin) continue
