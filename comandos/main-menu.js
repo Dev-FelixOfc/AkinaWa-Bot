@@ -23,7 +23,29 @@ let handler = async (m, { conn }) => {
     const devby = `${nombreBot}, ${dev}`
 
     let menu = `𝐇𝐨𝐥𝐚! 𝐒𝐨𝐲 *${nombreBot}* *${tipo}*
-Aǫᴜɪ ᴛɪᴇɴᴇs ʟᴀ ʟɪsᴛᴀ ᴅᴇ ᴄᴏᴍᴀɴᴅᴏs`
+Aǫᴜɪ ᴛɪᴇɴᴇs ʟᴀ ʟɪsᴛᴀ ᴅᴇ ᴄᴏᴍᴀɴᴅᴏs
+
+╭┈ ↷
+│ ✐ ${textbot}
+│ ✐ ꒷ꕤ💎ദ ᴘᴀɢɪɴᴀ ᴡᴇʙ ෴
+│ https://yotsuba.giize.com
+│ ✐ ꒷ꕤ💎ദ ᴄᴀɴᴀʟ ᴏғɪᴄɪᴀʟ ෴
+│ https://whatsapp.com/channel/0029Vb6p68rF6smrH4Jeay3Y
+╰─────────────────
+
+*»  ⊹ ˚୨ •(=^●ω●^=)• Main* ⊹
+> Comandos más importantes en el bot.
+
+*❏ #ping • #p*
+> Mira la velocidad de respuesta del bot.
+*❏ #menu • #help*
+> Mira la lista de comandos del bot.
+
+*»  ⊹ ˚୨ •(=^●ω●^=)• Economía* ⊹
+> ✎ Comandos de economía y Rpg para disfrutar con tus amigos.
+
+*❏ #daily*
+> Obtén una recompensa diaria.`
 
     await conn.sendMessage(m.chat, {
       text: menu,
