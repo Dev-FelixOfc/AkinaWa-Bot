@@ -17,7 +17,7 @@ import fs, { readdirSync, statSync, unlinkSync, existsSync, mkdirSync, readFileS
 import yargs from 'yargs';
 import { spawn, execSync } from 'child_process'
 import lodash from 'lodash'
-import { JadiBot } from './comandos/sockets/serbot.js'
+import { JadiBot } from './comandos/sockets-serbot.js'
 import { Low, JSONFile } from 'lowdb'
 import store from './comandos/configuraciones/store.js'
 const { proto } = (await import('@whiskeysockets/baileys')).default
