@@ -265,7 +265,7 @@ if (readBotPath.includes(creds)) {
 JadiBot({pathJadiBot: botPath, m: null, conn, args: '', usedPrefix: '/', command: 'serbot'})
 }}}}
 
-const comandoFolder = global.__dirname(join(__dirname, './comandos/index'))
+const comandoFolder = join(__dirname, './comandos')
 const comandoFilter = (filename) => /\.js$/.test(filename)
 global.comandos = {}
 async function filesInit() {
@@ -276,7 +276,7 @@ const module = await import(file)
 global.comandos[filename] = module.default || module
 } catch (e) {
 conn.logger.error(e)
-delete global.comanndos[filename]
+delete global.comandos[filename]
 }}}
 filesInit().then((_) => Object.keys(global.comandos)).catch(console.error)
 
