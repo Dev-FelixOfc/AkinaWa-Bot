@@ -33,6 +33,7 @@ Aǫᴜɪ ᴛɪᴇɴᴇs ʟᴀ ʟɪsᴛᴀ ᴅᴇ ᴄᴏᴍᴀɴᴅᴏs
 │ https://whatsapp.com/channel/0029Vb6p68rF6smrH4Jeay3Y
 ╰─────────────────
 
+
 *»  ⊹ ˚୨ •(=^●ω●^=)• Main* ⊹
 > Comandos más importantes en el bot.
 
