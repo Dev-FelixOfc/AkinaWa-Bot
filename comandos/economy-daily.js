@@ -137,9 +137,7 @@ var handler = async (m, { conn }) => {
     // Responder
     const message =
 `✿︎ *Obtuviste tu recompensa diaria de* *${reward} coins*
-> Día ${user.streak + 1} » *${nextReward} coins*
-
-Saldo actual: *${user.balance} coins*`
+> Día ${user.streak + 1} » *${nextReward} coins*`
 
     return conn.reply(m.chat, message, m)
   } catch (err) {
