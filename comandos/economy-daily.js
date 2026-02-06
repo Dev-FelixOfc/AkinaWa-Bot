@@ -112,7 +112,7 @@ var handler = async (m, { conn }) => {
       const remaining = COOLDOWN - (now - user.lastDaily)
       const { hours, minutes } = msToHourMinute(remaining)
       try { await m.react?.('✖️') } catch {}
-      return conn.reply(m.chat, `👾 Ya obtuviste tu daily de hoy, espera ${hours}h ${minutes}m para volver a reclamar.`, m)
+      return conn.reply(m.chat, `✿︎ Ya obtuviste tu daily de hoy, espera ${hours}h ${minutes}m para volver a reclamar.`, m)
     }
 
     // Calcular recompensa aleatoria (ajusta rango si quieres)
@@ -141,7 +141,7 @@ var handler = async (m, { conn }) => {
 
     // Responder
     const message =
-`👾 *Obtuviste tu recompensa diaria de* *${reward} coins*
+`✿︎ *Obtuviste tu recompensa diaria de* *${reward} coins*
 > Día ${user.streak + 1} » *${nextReward} coins*
 
 Saldo actual: *${user.balance} coins*`
