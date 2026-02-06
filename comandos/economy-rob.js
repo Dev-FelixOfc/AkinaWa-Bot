@@ -72,19 +72,17 @@ function msToMinutes(ms) {
   return Math.ceil(ms / 60000)
 }
 
-// Try to resolve a target user id from: reply -> mentions -> numeric arg
-function resolveTarget(m, args) {
-  // 1) If message is a reply, try to pull the quoted sender
+// Resuelve objetivo: RESPUESTA -> MENCIÓN -> ARG NUMÉRICO
+function resolveTargetNorm(m, args) {
   try {
     if (m?.quoted) {
-      // Baileys: quoted.key.participant or quoted.sender
+      // quoted puede tener sender o key.participant
       const q = m.quoted
-      const possible = (q.sender || q.participant || (q.key && (q.key.participant || q.key.remoteJid)) || q.key && q.key.remoteJid)
+      const possible = q.sender || q.participant || (q.key && (q.key.participant || q.key.remoteJid)) || q.key && q.key.remoteJid
       if (possible) {
         const norm = normalizeNumber(possible)
         if (norm) return norm
       }
-      // also sometimes the quoted message contains participant in contextinfo
       const contextParticipant = q?.contextInfo?.participant
       if (contextParticipant) {
         const norm = normalizeNumber(contextParticipant)
@@ -93,24 +91,31 @@ function resolveTarget(m, args) {
     }
   } catch (e) {}
 
-  // 2) mentions (m.mentionedJid array)
   try {
     if (m?.mentionedJid && Array.isArray(m.mentionedJid) && m.mentionedJid.length) {
-      const norm = normalizeNumber(m.mentionedJid[0])
-      if (norm) return norm
+      return normalizeNumber(m.mentionedJid[0])
     }
   } catch (e) {}
 
-  // 3) args: first arg may be number or @... or +...
   if (Array.isArray(args) && args.length) {
     const maybe = args[0]
-    if (typeof maybe === 'string') {
-      const norm = normalizeNumber(maybe)
-      if (norm) return norm
-    }
+    const norm = normalizeNumber(maybe)
+    if (norm) return norm
   }
 
   return null
+}
+
+// Construye JID para mentions (si se detectó m.mentionedJid, úsala; si no, construye)
+function buildMentionJid(m, norm) {
+  if (!norm) return null
+  // si la petición incluía m.mentionedJid y coincide con norm, úsala
+  if (m?.mentionedJid && Array.isArray(m.mentionedJid) && m.mentionedJid.length) {
+    // preferir la primera mencionada
+    return m.mentionedJid[0]
+  }
+  // fallback: construir JID estándar
+  return `${norm}@s.whatsapp.net`
 }
 
 var handler = async (m, { conn }) => {
@@ -132,26 +137,29 @@ var handler = async (m, { conn }) => {
 
     const text = (m.text || m.body || '').trim()
     const parts = text.split(/\s+/).slice(1)
-    const target = resolveTarget(m, parts)
-    if (!target) return conn.reply(m.chat, 'Uso: rob <mención|número> o responde al mensaje del usuario que quieres robar.\nEj: rob @usuario\nEj: rob 573123456789', m)
-    if (target === attacker) return conn.reply(m.chat, 'No puedes robarte a ti mismo.', m)
+    const targetNorm = resolveTargetNorm(m, parts)
+    if (!targetNorm) return conn.reply(m.chat, 'Uso: rob <mención|número> o responde al mensaje del usuario que quieres robar.\nEj: rob @usuario\nEj: rob 573123456789', m)
+    if (targetNorm === attacker) return conn.reply(m.chat, 'No puedes robarte a ti mismo.', m)
 
-    if (!db[target]) db[target] = { wallet: 0, bank: 0, lastAction: 0 }
+    if (!db[targetNorm]) db[targetNorm] = { wallet: 0, bank: 0, lastAction: 0 }
 
-    const victim = db[target]
+    const victim = db[targetNorm]
 
-    // If victim has no money anywhere
+    // Si no tiene dinero en ningún lado
     if ((!victim.wallet || victim.wallet <= 0) && (!victim.bank || victim.bank <= 0)) {
       return conn.reply(m.chat, '*❁ No puedes robarle a los pobres*\n\n> ¡Este usuario aún no tiene dinero!', m)
     }
 
-    // If victim has only bank (wallet 0) -> cannot rob
+    // Si tiene todo en banco (wallet 0 y bank > 0)
     if ((!victim.wallet || victim.wallet <= 0) && (victim.bank && victim.bank > 0)) {
-      return conn.reply(m.chat, '*❁ Este usuario tiene sus coins en el banco, no puedes robarselo*', m)
+      const mentionJid = buildMentionJid(m, targetNorm)
+      const textResp = '*❁ Este usuario tiene sus coins en el banco, no puedes robarselo*'
+      // mencionar para que se vea bien si hay mención
+      return conn.reply(m.chat, textResp, m, { mentions: mentionJid ? [mentionJid] : [] })
     }
 
-    // Victim protection: if victim used commands recently (within 1 hour), they are protected
-    const PROTECT_WINDOW = 60 * 60 * 1000 // 1 hora
+    // Protección por actividad reciente (1 hora)
+    const PROTECT_WINDOW = 60 * 60 * 1000
     const lastActionVictim = Number(victim.lastAction || 0)
     if (lastActionVictim && (now - lastActionVictim) < PROTECT_WINDOW) {
       const remaining = PROTECT_WINDOW - (now - lastActionVictim)
@@ -159,7 +167,7 @@ var handler = async (m, { conn }) => {
       return conn.reply(m.chat, `No puedes robar a este usuario ahora. Está protegido por actividad reciente (${mins} min restantes).`, m)
     }
 
-    // Ensure victim will not be left with 0; if wallet <=1 cannot steal
+    // wallet muy baja
     if ((victim.wallet || 0) <= 1) {
       return conn.reply(m.chat, '*❁ No puedes robarle a los pobres (wallet muy baja)*', m)
     }
@@ -167,15 +175,19 @@ var handler = async (m, { conn }) => {
     const maxSteal = Math.min(100, Math.max(1, (victim.wallet || 0) - 1))
     const stolen = randomInt(1, maxSteal)
 
-    // Transfer
+    // Transferencia
     victim.wallet = (victim.wallet || 0) - stolen
-    db[target] = victim
+    db[targetNorm] = victim
     db[attacker].wallet = (db[attacker].wallet || 0) + stolen
     db[attacker].lastRob = now
     db[attacker].lastAction = now
     writeDb(db)
 
-    return conn.reply(m.chat, `❁ Robaste *${stolen}* coins.`, m)
+    // Respuesta con mención
+    const mentionJid = buildMentionJid(m, targetNorm)
+    const displayTag = `@${targetNorm}`
+    const replyText = `❁ Robaste *${stolen}* coins a ${displayTag}.`
+    return conn.reply(m.chat, replyText, m, { mentions: mentionJid ? [mentionJid] : [] })
   } catch (err) {
     console.error(err)
     return conn.reply(m.chat, `⚠︎ Ocurrió un error en rob: ${err.message || err}`, m)
