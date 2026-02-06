@@ -139,7 +139,7 @@ var handler = async (m, { conn }) => {
       const jid = `${u.num}@s.whatsapp.net`
       mentions.push(jid)
       // Use @<number> in text so WhatsApp will convert it to mention when `mentions` provided
-      message += `${pos}. @${u.num}\n   Coins: *${u.total}*\n\n`
+      message += `❀ @${u.num}\n> Coins: *${u.total}*\n\n`
     }
     message += `• Página *${page}* de *${totalPages}*`
 
