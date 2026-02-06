@@ -131,7 +131,7 @@ var handler = async (m, { conn }) => {
     const pageItems = users.slice(start, start + PER_PAGE)
 
     // Build message and mentions array
-    let message = `*❁ Top usuarios por Coins (wallet + banco) ❁*\n\n`
+    let message = `*❁ Top usuarios con más coins ❁*\n\n`
     const mentions = []
     for (let i = 0; i < pageItems.length; i++) {
       const u = pageItems[i]
@@ -139,7 +139,7 @@ var handler = async (m, { conn }) => {
       const jid = `${u.num}@s.whatsapp.net`
       mentions.push(jid)
       // Use @<number> in text so WhatsApp will convert it to mention when `mentions` provided
-      message += `${pos}. @${u.num}\n   Coins en cartera: *${u.wallet}*\n   Coins en el banco: *${u.bank}*\n   Total: *${u.total}*\n\n`
+      message += `${pos}. @${u.num}\n   Coins: *${u.total}*\n\n`
     }
     message += `• Página *${page}* de *${totalPages}*`
 
