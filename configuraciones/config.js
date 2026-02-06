@@ -23,7 +23,7 @@ global.prems = [];
 
 // #_Channel Manager_#
 
-global.newletter = '@newletter';
+global.newletter = '120363404822730259@newsletter';
 global.channelname = 'Akina Wa Channel';
 
 // #_Mood Manager_#
