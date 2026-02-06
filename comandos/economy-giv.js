@@ -64,15 +64,37 @@ function writeDb(db) {
   fs.writeFileSync(dbFile, JSON.stringify(db, null, 2))
 }
 
-function parseTarget(parts, m) {
-  if (m?.mentionedJid && Array.isArray(m.mentionedJid) && m.mentionedJid.length) {
-    return normalizeNumber(m.mentionedJid[0])
-  }
-  if (parts.length >= 2) {
+// Resolve target from: reply -> mention -> last arg numeric
+function resolveTargetForGive(m, parts) {
+  try {
+    if (m?.quoted) {
+      const q = m.quoted
+      const possible = (q.sender || q.participant || (q.key && (q.key.participant || q.key.remoteJid)))
+      if (possible) {
+        const norm = normalizeNumber(possible)
+        if (norm) return norm
+      }
+      const contextParticipant = q?.contextInfo?.participant
+      if (contextParticipant) {
+        const norm = normalizeNumber(contextParticipant)
+        if (norm) return norm
+      }
+    }
+  } catch (e) {}
+
+  try {
+    if (m?.mentionedJid && Array.isArray(m.mentionedJid) && m.mentionedJid.length) {
+      const norm = normalizeNumber(m.mentionedJid[0])
+      if (norm) return norm
+    }
+  } catch (e) {}
+
+  if (Array.isArray(parts) && parts.length) {
     const maybe = parts[parts.length - 1]
-    const norm = maybe.replace(/\D/g, '')
+    const norm = normalizeNumber(maybe)
     if (norm) return norm
   }
+
   return null
 }
 
@@ -85,10 +107,10 @@ var handler = async (m, { conn }) => {
     if (!db[sender]) db[sender] = { wallet: 0, bank: 0, lastAction: 0 }
 
     const text = (m.text || m.body || '').trim()
-    const parts = text.split(/\s+/).slice(1) // amount and target
+    const parts = text.split(/\s+/).slice(1) // amount and target (target may be last arg or reply/mention)
 
-    if (parts.length < 2) {
-      return conn.reply(m.chat, 'Uso: givechar <cantidad> <mención|número>\nEj: givechar 500 @usuario\nEj: givechar 500 573123456789', m)
+    if (parts.length < 1) {
+      return conn.reply(m.chat, 'Uso: givechar <cantidad> <mención|número> o responde al usuario con: givechar <cantidad>\nEj: givechar 500 @usuario\nEj: givechar 500 573123456789\nO responde al mensaje del usuario: givechar 500', m)
     }
 
     const amount = Math.floor(Number(parts[0]))
@@ -96,11 +118,13 @@ var handler = async (m, { conn }) => {
       return conn.reply(m.chat, 'Cantidad inválida.', m)
     }
 
-    const target = parseTarget(parts, m)
-    if (!target) return conn.reply(m.chat, 'No se encontró el usuario destino. Menciona o escribe su número.', m)
+    const target = resolveTargetForGive(m, parts)
+    if (!target) return conn.reply(m.chat, 'No se encontró el usuario destino. Menciona, escribe su número o responde a su mensaje.', m)
     if (target === sender) return conn.reply(m.chat, 'No puedes regalarte a ti mismo.', m)
 
+    if (!db[sender]) db[sender] = { wallet: 0, bank: 0, lastAction: 0 }
     const giver = db[sender]
+
     if ((giver.wallet || 0) <= 0) {
       return conn.reply(m.chat, '*[❁]* No tienes suficientes coins para regalar.', m)
     }
