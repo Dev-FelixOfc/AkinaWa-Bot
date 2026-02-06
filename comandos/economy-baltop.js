@@ -7,22 +7,62 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const dbDir = path.join(__dirname, '..', 'jsons')
 const dbFile = path.join(dbDir, 'economy.json')
 
+function normalizeNumber(raw) {
+  if (!raw) return ''
+  return raw.toString().split('@')[0].replace(/\D/g, '')
+}
+
 function ensureDb() {
   if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true })
   if (!fs.existsSync(dbFile)) {
     const init = {
       "573235915041": {
-        balance: 999999,
+        wallet: 999999,
+        bank: 0,
         lastDaily: 0,
         streak: 0,
         diamonds: 0,
         coal: 0,
         gold: 0,
         lastCrime: 0,
-        lastChest: 0
+        lastChest: 0,
+        lastAction: 0,
+        lastRob: 0
       }
     }
     fs.writeFileSync(dbFile, JSON.stringify(init, null, 2))
+  }
+  // attempt migration balance -> wallet and normalize keys
+  try {
+    const raw = fs.readFileSync(dbFile, 'utf8')
+    const parsed = JSON.parse(raw || '{}')
+    const normalized = {}
+    let changed = false
+    for (const [key, val] of Object.entries(parsed || {})) {
+      const normKey = (key || '').toString().replace(/\D/g, '')
+      if (!normKey) continue
+      const v = (val && typeof val === 'object') ? val : {}
+      const wallet = Number(v.wallet ?? v.balance ?? 0)
+      const bank = Number(v.bank ?? 0)
+      normalized[normKey] = {
+        wallet,
+        bank,
+        lastDaily: Number(v.lastDaily ?? 0),
+        streak: Number(v.streak ?? 0),
+        diamonds: Number(v.diamonds ?? 0),
+        coal: Number(v.coal ?? 0),
+        gold: Number(v.gold ?? 0),
+        lastCrime: Number(v.lastCrime ?? 0),
+        lastChest: Number(v.lastChest ?? 0),
+        lastAction: Number(v.lastAction ?? 0),
+        lastRob: Number(v.lastRob ?? 0)
+      }
+      if (normKey !== key) changed = true
+    }
+    const normString = JSON.stringify(normalized, null, 2)
+    if (changed) fs.writeFileSync(dbFile, normString)
+  } catch (e) {
+    // if parsing failed, do nothing here - readDb will recreate if needed
   }
 }
 
@@ -34,14 +74,17 @@ function readDb() {
     try { fs.renameSync(dbFile, dbFile + '.corrupt.' + Date.now()) } catch {}
     const init = {
       "573235915041": {
-        balance: 999999,
+        wallet: 999999,
+        bank: 0,
         lastDaily: 0,
         streak: 0,
         diamonds: 0,
         coal: 0,
         gold: 0,
         lastCrime: 0,
-        lastChest: 0
+        lastChest: 0,
+        lastAction: 0,
+        lastRob: 0
       }
     }
     fs.writeFileSync(dbFile, JSON.stringify(init, null, 2))
@@ -52,26 +95,24 @@ function readDb() {
 var handler = async (m, { conn }) => {
   try {
     const db = readDb()
-    // usuarios con actividad económica (criterio: cualquier recurso > 0 o timestamps > 0)
-    const users = Object.entries(db)
-      .map(([num, info]) => ({ num, info }))
-      .filter(({ info }) => {
-        const used = (info.balance && info.balance > 0) ||
-                     (info.diamonds && info.diamonds > 0) ||
-                     (info.coal && info.coal > 0) ||
-                     (info.gold && info.gold > 0) ||
-                     (info.lastDaily && info.lastDaily > 0) ||
-                     (info.lastCrime && info.lastCrime > 0) ||
-                     (info.lastChest && info.lastChest > 0)
-        return used
-      })
+    const entries = Object.entries(db || {})
 
-    if (users.length === 0) return conn.reply(m.chat, '❀ No hay usuarios con actividad económica aún.', m)
+    // map to objects and filter users with any activity (or with any coins)
+    const users = entries.map(([num, info]) => {
+      const wallet = Number(info.wallet || 0)
+      const bank = Number(info.bank || 0)
+      const total = wallet + bank
+      return { num: num.toString(), wallet, bank, total }
+    }).filter(u => u.total > 0) // only users with coins; remove if you want all users
 
-    // ordenar por balance descendente
-    users.sort((a, b) => (b.info.balance || 0) - (a.info.balance || 0))
+    if (users.length === 0) {
+      return conn.reply(m.chat, '❀ No hay usuarios con Coins aún.', m)
+    }
 
-    // parsear página del mensaje: "baltop 2" o "topbalance 2"
+    // sort by total coins descending (wallet + bank)
+    users.sort((a, b) => b.total - a.total)
+
+    // parse page from command text: e.g. "baltop 2"
     const text = (m.text || m.body || '').trim()
     const parts = text.split(/\s+/)
     let page = 1
@@ -82,31 +123,35 @@ var handler = async (m, { conn }) => {
 
     const PER_PAGE = 10
     const totalPages = Math.max(1, Math.ceil(users.length / PER_PAGE))
-
     if (page > totalPages) {
-      return conn.reply(m.chat, `❀ la página *${page}* aún no existe.\n> El bot debe tener al menos 2 usuarios más que usen los comandos de economía para crear otra página.`, m)
+      return conn.reply(m.chat, `❀ La página *${page}* no existe. Hay *${totalPages}* páginas.`, m)
     }
 
     const start = (page - 1) * PER_PAGE
     const pageItems = users.slice(start, start + PER_PAGE)
 
-    let message = `*❁ Top usuarios con más Coins ❁*\n\n`
-    for (const u of pageItems) {
-      const displayNum = `+${u.num}`
-      message += `❀ ${displayNum}:\n> Coins » *${Number(u.info.balance || 0)}*\n\n`
+    // Build message and mentions array
+    let message = `*❁ Top usuarios por Coins (wallet + banco) ❁*\n\n`
+    const mentions = []
+    for (let i = 0; i < pageItems.length; i++) {
+      const u = pageItems[i]
+      const pos = start + i + 1
+      const jid = `${u.num}@s.whatsapp.net`
+      mentions.push(jid)
+      // Use @<number> in text so WhatsApp will convert it to mention when `mentions` provided
+      message += `${pos}. @${u.num}\n   Coins en cartera: *${u.wallet}*\n   Coins en el banco: *${u.bank}*\n   Total: *${u.total}*\n\n`
     }
     message += `• Página *${page}* de *${totalPages}*`
 
-    return conn.reply(m.chat, message, m)
+    return conn.reply(m.chat, message, m, { mentions })
   } catch (err) {
     console.error(err)
-    return conn.reply(m.chat, `⚠︎ Ocurrió un error al obtener el top: ${err.message || err}`, m)
+    return conn.reply(m.chat, `⚠︎ Ocurrió un error al obtener el baltop: ${err.message || err}`, m)
   }
 }
 
 handler.help = ['baltop', 'topbalance']
 handler.tags = ['economy']
-// triggers sin '#'
 handler.command = ['baltop', 'topbalance']
 
 export default handler
