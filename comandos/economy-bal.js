@@ -77,7 +77,9 @@ var handler = async (m, { conn }) => {
 
 Coins en cartera: *${wallet}*
 Coins en el banco: *${bank}*
-Total de coins: *${total}*`
+Total de coins: *${total}*
+
+> ¡Usa más los comandos de economía para que ganes más dinero y seas el más rico!`
 
     return conn.reply(m.chat, message, m)
   } catch (err) {
