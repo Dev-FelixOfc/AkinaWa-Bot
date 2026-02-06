@@ -1,3 +1,4 @@
+// comandos/economy-balance.js
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -72,7 +73,9 @@ var handler = async (m, { conn }) => {
     const total = wallet + bank
 
     const message =
-`Coins en cartera: *${wallet}*
+`❁ \`Balance del usuario\` ❁
+
+Coins en cartera: *${wallet}*
 Coins en el banco: *${bank}*
 Total de coins: *${total}*`
 
