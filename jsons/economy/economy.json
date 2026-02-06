@@ -1,7 +1,13 @@
+// jsons/economy.json
 {
   "573235915041": {
     "balance": 999999,
     "lastDaily": 0,
-    "streak": 0
+    "streak": 0,
+    "diamonds": 0,
+    "coal": 0,
+    "gold": 0,
+    "lastCrime": 0,
+    "lastChest": 0
   }
 }
