@@ -72,17 +72,44 @@ function msToMinutes(ms) {
   return Math.ceil(ms / 60000)
 }
 
-function parseTarget(parts, m) {
-  // Prefer mention (Baileys)
-  if (m?.mentionedJid && Array.isArray(m.mentionedJid) && m.mentionedJid.length) {
-    return normalizeNumber(m.mentionedJid[0])
+// Try to resolve a target user id from: reply -> mentions -> numeric arg
+function resolveTarget(m, args) {
+  // 1) If message is a reply, try to pull the quoted sender
+  try {
+    if (m?.quoted) {
+      // Baileys: quoted.key.participant or quoted.sender
+      const q = m.quoted
+      const possible = (q.sender || q.participant || (q.key && (q.key.participant || q.key.remoteJid)) || q.key && q.key.remoteJid)
+      if (possible) {
+        const norm = normalizeNumber(possible)
+        if (norm) return norm
+      }
+      // also sometimes the quoted message contains participant in contextinfo
+      const contextParticipant = q?.contextInfo?.participant
+      if (contextParticipant) {
+        const norm = normalizeNumber(contextParticipant)
+        if (norm) return norm
+      }
+    }
+  } catch (e) {}
+
+  // 2) mentions (m.mentionedJid array)
+  try {
+    if (m?.mentionedJid && Array.isArray(m.mentionedJid) && m.mentionedJid.length) {
+      const norm = normalizeNumber(m.mentionedJid[0])
+      if (norm) return norm
+    }
+  } catch (e) {}
+
+  // 3) args: first arg may be number or @... or +...
+  if (Array.isArray(args) && args.length) {
+    const maybe = args[0]
+    if (typeof maybe === 'string') {
+      const norm = normalizeNumber(maybe)
+      if (norm) return norm
+    }
   }
-  // else try first argument
-  if (parts.length >= 1) {
-    const maybe = parts[0]
-    const norm = maybe.replace(/\D/g, '')
-    if (norm) return norm
-  }
+
   return null
 }
 
@@ -105,8 +132,8 @@ var handler = async (m, { conn }) => {
 
     const text = (m.text || m.body || '').trim()
     const parts = text.split(/\s+/).slice(1)
-    const target = parseTarget(parts, m)
-    if (!target) return conn.reply(m.chat, 'Uso: rob <mención|número>\nEj: rob @usuario\nEj: rob 573123456789', m)
+    const target = resolveTarget(m, parts)
+    if (!target) return conn.reply(m.chat, 'Uso: rob <mención|número> o responde al mensaje del usuario que quieres robar.\nEj: rob @usuario\nEj: rob 573123456789', m)
     if (target === attacker) return conn.reply(m.chat, 'No puedes robarte a ti mismo.', m)
 
     if (!db[target]) db[target] = { wallet: 0, bank: 0, lastAction: 0 }
@@ -119,7 +146,7 @@ var handler = async (m, { conn }) => {
     }
 
     // If victim has only bank (wallet 0) -> cannot rob
-    if (!victim.wallet || victim.wallet <= 0) {
+    if ((!victim.wallet || victim.wallet <= 0) && (victim.bank && victim.bank > 0)) {
       return conn.reply(m.chat, '*❁ Este usuario tiene sus coins en el banco, no puedes robarselo*', m)
     }
 
