@@ -12,6 +12,8 @@ function normalizeNumber(raw) {
   return raw.toString().split('@')[0].replace(/\D/g, '')
 }
 
+// Asegura existencia de la carpeta y archivo con estructura inicial.
+// Normaliza claves y migra 'balance' -> 'wallet' si es necesario.
 function ensureDb() {
   if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true })
   if (!fs.existsSync(dbFile)) {
@@ -33,38 +35,55 @@ function ensureDb() {
     fs.writeFileSync(dbFile, JSON.stringify(init, null, 2))
     return
   }
+
+  // Leer y normalizar sin perder datos
+  const raw = fs.readFileSync(dbFile, 'utf8')
   try {
-    const raw = fs.readFileSync(dbFile, 'utf8')
     const parsed = JSON.parse(raw || '{}')
     const normalized = {}
     for (const [key, val] of Object.entries(parsed || {})) {
-      const norm = (key || '').toString().replace(/\D/g, '')
-      if (!norm) continue
-      normalized[norm] = {
-        balance: Number((val && val.balance) || 0),
-        lastDaily: Number((val && val.lastDaily) || 0),
-        streak: Number((val && val.streak) || 0),
-        diamonds: Number((val && val.diamonds) || 0),
-        coal: Number((val && val.coal) || 0),
-        gold: Number((val && val.gold) || 0),
-        lastCrime: Number((val && val.lastCrime) || 0),
-        lastChest: Number((val && val.lastChest) || 0)
+      const normKey = (key || '').toString().replace(/\D/g, '')
+      if (!normKey) continue
+      const v = (val && typeof val === 'object') ? val : {}
+
+      // Mapea balance antiguo a wallet nuevo, y respeta wallet si ya existe.
+      const wallet = Number(v.wallet ?? v.balance ?? 0)
+      const bank = Number(v.bank ?? 0)
+
+      normalized[normKey] = {
+        wallet: wallet,
+        bank: bank,
+        lastDaily: Number(v.lastDaily ?? 0),
+        streak: Number(v.streak ?? 0),
+        diamonds: Number(v.diamonds ?? 0),
+        coal: Number(v.coal ?? 0),
+        gold: Number(v.gold ?? 0),
+        lastCrime: Number(v.lastCrime ?? 0),
+        lastChest: Number(v.lastChest ?? 0),
+        lastAction: Number(v.lastAction ?? 0),
+        lastRob: Number(v.lastRob ?? 0)
       }
     }
+
+    // Reescribir sólo si hay diferencias (evita sobreescribir si no cambia)
     const normString = JSON.stringify(normalized, null, 2)
     if (normString !== raw) fs.writeFileSync(dbFile, normString)
   } catch (e) {
+    // Si JSON corrupto: respaldar y crear init con la estructura nueva
     try { fs.renameSync(dbFile, dbFile + '.corrupt.' + Date.now()) } catch {}
     const init = {
       "573235915041": {
-        balance: 999999,
+        wallet: 999999,
+        bank: 0,
         lastDaily: 0,
         streak: 0,
         diamonds: 0,
         coal: 0,
         gold: 0,
         lastCrime: 0,
-        lastChest: 0
+        lastChest: 0,
+        lastAction: 0,
+        lastRob: 0
       }
     }
     fs.writeFileSync(dbFile, JSON.stringify(init, null, 2))
@@ -76,17 +95,21 @@ function readDb() {
   try {
     return JSON.parse(fs.readFileSync(dbFile, 'utf8') || '{}')
   } catch (e) {
+    // Si falla de nuevo, respaldar y crear init
     try { fs.renameSync(dbFile, dbFile + '.corrupt.' + Date.now()) } catch {}
     const init = {
       "573235915041": {
-        balance: 999999,
+        wallet: 999999,
+        bank: 0,
         lastDaily: 0,
         streak: 0,
         diamonds: 0,
         coal: 0,
         gold: 0,
         lastCrime: 0,
-        lastChest: 0
+        lastChest: 0,
+        lastAction: 0,
+        lastRob: 0
       }
     }
     fs.writeFileSync(dbFile, JSON.stringify(init, null, 2))
@@ -112,7 +135,20 @@ var handler = async (m, { conn }) => {
     const sender = normalizeNumber(m.sender || m.from || m.participant || '')
     if (!sender) return conn.reply(m.chat, '* No se pudo identificar tu número.', m)
 
-    if (!db[sender]) db[sender] = { balance: 0, lastDaily: 0, streak: 0, diamonds: 0, coal: 0, gold: 0, lastCrime: 0, lastChest: 0 }
+    // Asegurar estructura del usuario (usando wallet/bank)
+    if (!db[sender]) db[sender] = {
+      wallet: 0,
+      bank: 0,
+      lastDaily: 0,
+      streak: 0,
+      diamonds: 0,
+      coal: 0,
+      gold: 0,
+      lastCrime: 0,
+      lastChest: 0,
+      lastAction: 0,
+      lastRob: 0
+    }
 
     const user = db[sender]
     const now = Date.now()
@@ -129,11 +165,13 @@ var handler = async (m, { conn }) => {
     const coal = randomInt(1, 10)
     const gold = randomInt(0, 2)
 
-    user.balance = (user.balance || 0) + coins
+    // Actualizar wallet (fuera del banco), no 'balance'
+    user.wallet = (user.wallet || 0) + coins
     user.diamonds = (user.diamonds || 0) + diamonds
     user.coal = (user.coal || 0) + coal
     user.gold = (user.gold || 0) + gold
     user.lastChest = now
+    user.lastAction = now
 
     db[sender] = user
     writeDb(db)
