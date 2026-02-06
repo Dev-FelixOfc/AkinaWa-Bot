@@ -1,3 +1,4 @@
+// comandos/economy-balance.js
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -14,10 +15,20 @@ function normalizeNumber(raw) {
 function ensureDb() {
   if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true })
   if (!fs.existsSync(dbFile)) {
-    const init = { "573235915041": { balance: 999999, lastDaily: 0, streak: 0 } }
+    const init = {
+      "573235915041": {
+        balance: 999999,
+        lastDaily: 0,
+        streak: 0,
+        diamonds: 0,
+        coal: 0,
+        gold: 0,
+        lastCrime: 0,
+        lastChest: 0
+      }
+    }
     fs.writeFileSync(dbFile, JSON.stringify(init, null, 2))
   } else {
-    // Normalizar claves si es necesario (migración simple)
     try {
       const raw = fs.readFileSync(dbFile, 'utf8')
       const parsed = JSON.parse(raw || '{}')
@@ -26,22 +37,20 @@ function ensureDb() {
       for (const [key, val] of Object.entries(parsed || {})) {
         const norm = (key || '').toString().replace(/\D/g, '')
         if (!norm) continue
-        if (!normalized[norm]) {
-          normalized[norm] = {
-            balance: Number(val.balance || 0),
-            lastDaily: Number(val.lastDaily || 0),
-            streak: Number(val.streak || 0)
-          }
-        } else {
-          normalized[norm].balance = (normalized[norm].balance || 0) + Number(val.balance || 0)
-          normalized[norm].lastDaily = Math.max(normalized[norm].lastDaily || 0, Number(val.lastDaily || 0))
-          normalized[norm].streak = Math.max(normalized[norm].streak || 0, Number(val.streak || 0))
+        normalized[norm] = {
+          balance: Number((val && val.balance) || 0),
+          lastDaily: Number((val && val.lastDaily) || 0),
+          streak: Number((val && val.streak) || 0),
+          diamonds: Number((val && val.diamonds) || 0),
+          coal: Number((val && val.coal) || 0),
+          gold: Number((val && val.gold) || 0),
+          lastCrime: Number((val && val.lastCrime) || 0),
+          lastChest: Number((val && val.lastChest) || 0)
         }
         if (norm !== key) changed = true
       }
       if (changed) fs.writeFileSync(dbFile, JSON.stringify(normalized, null, 2))
     } catch (e) {
-      // si falla, no hacemos nada — asegúrate de reparar el archivo manualmente
       console.error('ensureDb migration error:', e)
     }
   }
@@ -54,7 +63,18 @@ function readDb() {
     return JSON.parse(raw || '{}')
   } catch (e) {
     try { fs.renameSync(dbFile, dbFile + '.corrupt.' + Date.now()) } catch {}
-    const init = { "8094374392": { balance: 999999, lastDaily: 0, streak: 0 } }
+    const init = {
+      "573235915041": {
+        balance: 999999,
+        lastDaily: 0,
+        streak: 0,
+        diamonds: 0,
+        coal: 0,
+        gold: 0,
+        lastCrime: 0,
+        lastChest: 0
+      }
+    }
     fs.writeFileSync(dbFile, JSON.stringify(init, null, 2))
     return init
   }
@@ -64,9 +84,7 @@ var handler = async (m, { conn }) => {
   try {
     const db = readDb()
     const sender = normalizeNumber(m.sender || m.from || m.participant || '')
-    if (!sender) {
-      return conn.reply(m.chat, 'No se pudo identificar tu número.', m)
-    }
+    if (!sender) return conn.reply(m.chat, 'No se pudo identificar tu número.', m)
 
     const userEntry = db[sender] || { balance: 0 }
 
@@ -86,6 +104,6 @@ Coins: *${Number(userEntry.balance || 0)}*
 
 handler.help = ['bal', 'balance']
 handler.tags = ['economy']
-handler.command = ['#bal', '#balance', 'bal', 'balance']
+handler.command = ['bal', 'balance']
 
 export default handler
