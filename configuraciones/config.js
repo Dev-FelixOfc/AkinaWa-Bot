@@ -15,6 +15,12 @@ global.owner = [
   '18094374392',
   '573107400303',
 ];
+global.mods = [
+  '5355699866',
+];
+global.support = [
+  '526183215294',
+];
 
 // #_Bot Manager_#
 
