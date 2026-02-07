@@ -90,7 +90,7 @@ async function makeTempSocket(sessionName) {
   // si tienes wrapper local lo usamos, si no el makeWASocket de baileys
   let makeWASocket = null
   try {
-    const mod = await import('../lib/simple.js')
+    const mod = await import('./configuraciones/simple.js')
     makeWASocket = mod.makeWASocket ?? mod.default ?? null
   } catch (e) {}
   if (!makeWASocket) makeWASocket = (await import('@whiskeysockets/baileys')).makeWASocket
