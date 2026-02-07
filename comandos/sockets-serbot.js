@@ -53,9 +53,9 @@ JBOptions.fromCommand = true
 JadiBot(JBOptions)
 global.db.data.users[m.sender].Subs = new Date * 1
 } 
-handler.help = ['qr', 'code']
+handler.help = ['serbot', 'serbotcode']
 handler.tags = ['serbot']
-handler.command = ['qr', 'code']
+handler.command = ['serbot', 'serbotcode']
 export default handler 
 
 
