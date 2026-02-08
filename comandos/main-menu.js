@@ -20,7 +20,7 @@ let handler = async (m, { conn }) => {
     }
 
     const tipo = conn.user?.jid === global.conn?.user?.jid ? '(𝐌𝐨𝐨𝐝)' : '(𝐒𝐮𝐛-𝐁𝐨𝐭)'
-    const devby = `${nombreBot}, ${dev}`
+    const devby = `${nombreBot}, ${ownername}`
 
     let menu = `𝐇𝐨𝐥𝐚! 𝐒𝐨𝐲 *${nombreBot}* *${tipo}*
 Aǫᴜɪ ᴛɪᴇɴᴇs ʟᴀ ʟɪsᴛᴀ ᴅᴇ ᴄᴏᴍᴀɴᴅᴏs
