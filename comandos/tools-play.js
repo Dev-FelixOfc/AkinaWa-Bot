@@ -74,7 +74,7 @@ handler.before = async (m, { conn }) => {
         
         const selected = session.results[choice - 1];
         
-        await m.reply(`⬇️ *Descargando:*\n🎵 ${selected.title}\n⏱️ ${selected.duration}\n📺 ${selected.channel}\n\n⏳ Esto puede tomar unos segundos...`);
+        await m.reply(`⬇️ *Descargando:*\n> ⏳ Esto puede tomar unos segundos...`);
 
         const videoUrl = encodeURIComponent(selected.link);
         const downloadUrl = `https://nexevo.onrender.com/download/y?url=${videoUrl}`;
@@ -88,13 +88,6 @@ handler.before = async (m, { conn }) => {
 
         const audioInfo = downloadData.result.info;
         const audioUrl = downloadData.result.url;
-
-        const caption = `✅ *Descarga completada*\n\n` +
-                       `🎵 *Título:* ${audioInfo.title || selected.title}\n` +
-                       `⏱️ *Duración:* ${audioInfo.duration || selected.duration}\n` +
-                       `📺 *Canal:* ${audioInfo.channel || selected.channel}\n` +
-                       `🎶 *Formato:* ${downloadData.result.format.toUpperCase()}\n` +
-                       `💿 *Calidad:* ${downloadData.result.quality}kbps`;
 
         await conn.sendMessage(m.chat, {
           audio: { url: audioUrl },
@@ -110,8 +103,6 @@ handler.before = async (m, { conn }) => {
             }
           }
         });
-
-        await conn.sendMessage(m.chat, { text: caption });
         
         return true;
       }
