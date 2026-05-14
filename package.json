@@ -1,7 +1,7 @@
 {
-  "name": "akibawa-bot",
+  "name": "base-bot",
   "version": "1.2.0",
-  "description": "Bot multi-device con arquitectura CommonJS y TodLeys",
+  "description": "Bot multi-device con arquitectura ESM y TodLeys",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
