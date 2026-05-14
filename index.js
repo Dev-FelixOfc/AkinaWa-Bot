@@ -7,6 +7,7 @@ const {
     DisconnectReason, 
     Browsers 
 } = require('todleys');
+const { database } = require('@Dev-FelixOfc/databaselib');
 const P = require('pino');
 const path = require('path');
 const fs = require('fs-extra');
@@ -18,6 +19,20 @@ const rl = createInterface({ input: process.stdin, output: process.stdout });
 const question = (text) => new Promise((resolve) => rl.question(text, resolve));
 
 global.conns = new Map();
+global.db = new database('./database.json');
+
+async function loadDatabase() {
+    await global.db.read();
+    global.db.data = {
+        users: {},
+        chats: {},
+        settings: {},
+        ...(global.db.data || {})
+    };
+    setInterval(async () => {
+        if (global.db.data) await global.db.write();
+    }, 30000);
+}
 
 async function startBot(sessionId = 'session_principal', isSubbot = false) {
     const sessionPath = path.join(__dirname, isSubbot ? `subbots/${sessionId}` : sessionId);
@@ -58,7 +73,7 @@ async function startBot(sessionId = 'session_principal', isSubbot = false) {
 
     conn.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect } = update;
-        
+
         if (connection === 'close') {
             const reason = lastDisconnect?.error?.output?.statusCode;
             if (reason !== DisconnectReason.loggedOut) {
@@ -73,7 +88,7 @@ async function startBot(sessionId = 'session_principal', isSubbot = false) {
                 process.stdout.write('\x1Bc');
                 CFonts.say('BASE-BOT', { font: 'block', align: 'center', colors: ['cyan'] });
                 console.log(chalk.green(`\n[+] Principal conectado como: ${conn.user.id.split(':')[0]}`));
-                
+
                 const subDir = path.join(__dirname, 'subbots');
                 if (fs.existsSync(subDir)) {
                     const folders = fs.readdirSync(subDir);
@@ -93,7 +108,12 @@ async function startBot(sessionId = 'session_principal', isSubbot = false) {
             const m = chatUpdate.messages[0];
             if (!m || !m.message) return;
             if (m.key.remoteJid === 'status@broadcast') return;
-            
+
+            if (global.db.data) {
+                const from = m.key.remoteJid;
+                if (!(from in global.db.data.chats)) global.db.data.chats[from] = { antilink: false };
+            }
+
             require('./handler')(conn, m);
         } catch (e) {
             console.error(e);
@@ -103,4 +123,8 @@ async function startBot(sessionId = 'session_principal', isSubbot = false) {
     return conn;
 }
 
-startBot();
+loadDatabase().then(() => {
+    startBot();
+});
+
+module.exports = { startBot };
